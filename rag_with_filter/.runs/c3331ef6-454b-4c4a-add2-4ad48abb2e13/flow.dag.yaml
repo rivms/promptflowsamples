@@ -1,0 +1,81 @@
+id: template_chat_flow
+name: Template Chat Flow
+inputs:
+  chat_history:
+    type: list
+    is_chat_input: false
+    is_chat_history: true
+  question:
+    type: string
+    is_chat_input: true
+outputs:
+  answer:
+    type: string
+    reference: ${chat.output}
+    is_chat_output: true
+nodes:
+- name: create_search_query
+  type: prompt
+  source:
+    type: code
+    path: create_search_query.jinja2
+  inputs:
+    chat_history: ${inputs.chat_history}
+    question: ${inputs.question}
+  use_variants: false
+- name: chat
+  type: llm
+  source:
+    type: code
+    path: chat.jinja2
+  inputs:
+    deployment_name: gpt-4-32k
+    temperature: 0.7
+    top_p: 1
+    max_tokens: 256
+    response_format:
+      type: json_object
+    presence_penalty: 0
+    frequency_penalty: 0
+    functions:
+    - name: search_documents
+      description: Retrieves documents from the search index based on the parameters
+        provided
+      parameters:
+        type: object
+        properties:
+          query:
+            type: string
+            description: The search query used to retrieve documents
+          file_name:
+            type: string
+            description: The file name to filter the search by
+        required:
+        - query
+    prompt_text: ${create_search_query.output}
+  provider: AzureOpenAI
+  connection: demogpt4
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: search_call
+  type: llm
+  source:
+    type: code
+    path: search_call.jinja2
+  inputs:
+    deployment_name: gpt-4-32k
+    temperature: 1
+    top_p: 1
+    max_tokens: 16
+    presence_penalty: 0
+    frequency_penalty: 0
+    prompt_text: ${create_search_query.output}
+  provider: AzureOpenAI
+  connection: demogpt4
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+node_variants: {}
+environment:
+  python_requirements_txt: requirements.txt

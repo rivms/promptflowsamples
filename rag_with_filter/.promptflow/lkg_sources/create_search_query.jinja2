@@ -1,0 +1,16 @@
+system:
+Below is a history of the conversation so far, and a new question asked by the user that needs to be answered by searching in a knowledge base.
+
+Convert the user's question into an optimised query for a search engine, removing unnecessary words. Extract any filenames mentioned and use the optimised search query and filename to responds with json with structure {"search_query": "", "file_name": "" }
+
+{# Chat history #}
+{% for item in chat_history %}
+user:
+{{ item.inputs.question }}
+assistant:
+{{ item.outputs.answer }}
+
+{% endfor %}
+
+user: 
+Generate search query for question: {{question}}

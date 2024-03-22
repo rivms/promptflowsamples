@@ -1,0 +1,129 @@
+id: template_chat_flow
+name: Template Chat Flow
+inputs:
+  chat_history:
+    type: list
+    is_chat_input: false
+    is_chat_history: true
+  question:
+    type: string
+    is_chat_input: true
+outputs:
+  answer:
+    type: string
+    reference: ${chat.output}
+    is_chat_output: true
+nodes:
+- name: create_search_query
+  type: prompt
+  source:
+    type: code
+    path: create_search_query.jinja2
+  inputs:
+    chat_history: ${inputs.chat_history}
+    question: ${inputs.question}
+  use_variants: false
+- name: chat
+  type: llm
+  source:
+    type: code
+    path: chat.jinja2
+  inputs:
+    deployment_name: gpt-4-32k
+    temperature: 0.2
+    top_p: 1
+    max_tokens: 256
+    response_format:
+      type: text
+    presence_penalty: 0
+    frequency_penalty: 0
+    functions:
+    - name: search_documents
+      description: Retrieves documents from the search index based on the parameters
+        provided
+      parameters:
+        type: object
+        properties:
+          query:
+            type: string
+            description: The search query used to retrieve documents
+          file_name:
+            type: string
+            description: The file name to filter the search by. Set this to null if no
+              filename is provided
+        required:
+        - query
+    function_call:
+      name: search_documents
+    prompt_text: ${create_search_query.output}
+  provider: AzureOpenAI
+  connection: demogpt4
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: echo
+  type: python
+  source:
+    type: code
+    path: echo.py
+  inputs:
+    input1: ${chat.output.function_call.arguments}
+  use_variants: false
+- name: embed_query
+  type: python
+  source:
+    type: package
+    tool: promptflow.tools.embedding.embedding
+  inputs:
+    connection: demogpt4
+    deployment_name: text-embedding-ada-002
+    input: ${echo.output.query}
+  use_variants: false
+- name: ai_search
+  type: python
+  source:
+    type: code
+    path: ai_search.py
+  inputs: {}
+  use_variants: false
+- name: index_lookup
+  type: python
+  source:
+    type: package
+    tool: promptflow_vectordb.tool.common_index_lookup.search
+  inputs:
+    mlindex_content: >
+      embeddings:
+        api_base: https://democaaoai006.openai.azure.com/
+        api_type: azure
+        api_version: 2023-07-01-preview
+        batch_size: '1'
+        connection:
+          id: /subscriptions/e30fd2b2-3a7f-45e9-8a8e-1112c5b778b2/resourceGroups/ml-dev-rg/providers/Microsoft.MachineLearningServices/workspaces/labdevaml001/connections/demogpt4
+        connection_type: workspace_connection
+        deployment: text-embedding-ada-002
+        dimension: 1536
+        kind: open_ai
+        model: text-embedding-ada-002
+        schema_version: '2'
+      index:
+        api_version: 2023-07-01-Preview
+        connection:
+          id: /subscriptions/e30fd2b2-3a7f-45e9-8a8e-1112c5b778b2/resourceGroups/ml-dev-rg/providers/Microsoft.MachineLearningServices/workspaces/labdevaml001/connections/gptkb-gdm7wgiiihc5y
+        connection_type: workspace_connection
+        endpoint: https://gptkb-gdm7wgiiihc5y.search.windows.net
+        engine: azure-sdk
+        field_mapping:
+          content: content
+          embedding: embedding
+          metadata: null
+        index: aoaientsearchrio
+        kind: acs
+        semantic_configuration_name: default
+    queries: ${echo.output.query}
+    query_type: Hybrid + semantic
+    top_k: 3
+  use_variants: false
+node_variants: {}
+environment:
+  python_requirements_txt: requirements.txt

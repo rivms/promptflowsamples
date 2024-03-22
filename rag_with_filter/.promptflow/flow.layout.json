@@ -1,0 +1,61 @@
+{
+  "orientation": "Vertical",
+  "nodeLayouts": {
+    "inputs": {
+      "x": 131.5,
+      "y": 62,
+      "index": -1
+    },
+    "outputs": {
+      "x": 12,
+      "y": 392,
+      "index": -1
+    },
+    "create_search_query": {
+      "x": 131.5,
+      "y": 172,
+      "height": 75,
+      "index": 0
+    },
+    "chat": {
+      "x": 131.5,
+      "y": 282,
+      "height": 75,
+      "index": 1
+    },
+    "index_lookup": {
+      "x": 196.5,
+      "y": 502,
+      "height": 75,
+      "index": 5
+    },
+    "ai_search": {
+      "x": 362,
+      "y": 612,
+      "height": 75,
+      "index": 4
+    },
+    "embed_query": {
+      "x": 417.5,
+      "y": 502,
+      "height": 75,
+      "index": 3
+    },
+    "function_call_to_json": {
+      "x": 362,
+      "y": 392,
+      "height": 75,
+      "index": 2
+    }
+  },
+  "viewport": {
+    "transformMatrix": [
+      0.6527015873546049,
+      0,
+      0,
+      0.6527015873546049,
+      -70.20014923137353,
+      -83.2629939750972
+    ]
+  }
+}
